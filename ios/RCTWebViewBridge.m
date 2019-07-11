@@ -12,6 +12,17 @@
 
 #import "RCTWebViewBridge.h"
 
+#import <UIKit/UIKit.h>
+
+#import <React/RCTAutoInsetsProtocol.h>
+#import <React/RCTConvert.h>
+#import <React/RCTEventDispatcher.h>
+#import <React/RCTLog.h>
+#import <React/RCTUtils.h>
+#import <React/RCTView.h>
+#import "UIView+React.h"
+#import <objc/runtime.h>
+
 //This is a very elegent way of defining multiline string in objective-c.
 //source: http://stackoverflow.com/a/23387659/828487
 #define NSStringMultiline(...) [[NSString alloc] initWithCString:#__VA_ARGS__ encoding:NSUTF8StringEncoding]
@@ -54,6 +65,7 @@ NSString *const RCTWebViewBridgeSchema = @"wvb";
     _contentInset = UIEdgeInsetsZero;
     _webView = [[UIWebView alloc] initWithFrame:self.bounds];
     _webView.delegate = self;
+    _webView.mediaPlaybackRequiresUserAction = NO;
     [self addSubview:_webView];
   }
   return self;
@@ -88,7 +100,10 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
     }());
   );
 
-  NSString *command = [NSString stringWithFormat: format, message];
+  // Escape singlequotes or messages containing ' will fail
+  NSString *quotedMessage = [message stringByReplacingOccurrencesOfString:@"'" withString:@"\\'"];
+
+  NSString *command = [NSString stringWithFormat: format, quotedMessage];
   [_webView stringByEvaluatingJavaScriptFromString:command];
 }
 
